@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Creator</title>
+</head>
+<body>
+    <h1>Tournament Creator</h1>
+    
+    <div id="teamInput">
+        <input type="text" id="teamName" placeholder="Enter team name">
+        <button onclick="addTeam()">Add Team</button>
+    </div>
+
+    <div id="teamList">
+        <h3>Teams:</h3>
+        <ul id="teamsDisplay"></ul>
+    </div>
+
+    <button onclick="startTournament()">Start Tournament</button>
+
+    <div id="fixtures">
+        <!-- Fixtures for the current round will be displayed here -->
+    </div>
+
+    <div id="winners">
+        <!-- Winners of the current round will be displayed here -->
+    </div>
+
+    <button id="nextRoundBtn" style="display: none;" onclick="nextRound()">Next Round</button>
+
+    <script>
+        let teams = [];
+
+        function addTeam() {
+            const teamInput = document.getElementById('teamName');
+            const teamName = teamInput.value.trim();
+            if (teamName === "") return; // Ignore empty team names
+            if (teams.includes(teamName)) {
+                alert("Team already exists!");
+                return;
+            }
+            teams.push(teamName);
+            teamInput.value = ""; // Clear input field
+            displayTeams();
+        }
+
+        function displayTeams() {
+            const teamsDisplay = document.getElementById('teamsDisplay');
+            teamsDisplay.innerHTML = ""; // Clear previous teams
+            teams.forEach(team => {
+                const listItem = document.createElement('li');
+                listItem.textContent = team;
+                teamsDisplay.appendChild(listItem);
+            });
+        }
+
+        function startTournament() {
+            if (teams.length < 2) {
+                alert("Add at least 2 teams to start the tournament.");
+                return;
+            }
+            
+            const fixturesContainer = document.getElementById('fixtures');
+            fixturesContainer.innerHTML = ""; // Clear previous fixtures
+            
+            const numTeams = teams.length;
+            const numMatches = Math.floor(numTeams / 2);
+            
+            for (let i = 0; i < numMatches; i++) {
+                const match = document.createElement('div');
+                const team1 = teams[i];
+                const team2 = teams[numMatches + i];
+                const matchId = `match_${i + 1}`;
+                match.innerHTML = `<span>${team1}</span> vs <span>${team2}</span><br>
+                                   <input type="number" id="${matchId}_score1" placeholder="Score ${team1}">
+                                   <input type="number" id="${matchId}_score2" placeholder="Score ${team2}">
+                                   <button onclick="displayWinner('${team1}', '${team2}', '${matchId}')">OK</button>
+                                   <span id="${matchId}_winner"></span>`;
+                fixturesContainer.appendChild(match);
+            }
+
+            // Show the Next Round button
+            document.getElementById('nextRoundBtn').style.display = 'inline';
+        }
+
+        function displayWinner(team1, team2, matchId) {
+            const score1 = parseInt(document.getElementById(`${matchId}_score1`).value);
+            const score2 = parseInt(document.getElementById(`${matchId}_score2`).value);
+            
+            let winner = null;
+            if (!isNaN(score1) && !isNaN(score2)) {
+                winner = score1 > score2 ? team1 : team2;
+                document.getElementById(`${matchId}_winner`).textContent = `Winner: ${winner}`;
+            } else {
+                alert("Please enter scores for both teams.");
+            }
+        }
+
+        function nextRound() {
+            const winnersContainer = document.getElementById('winners');
+            winnersContainer.innerHTML = ""; // Clear previous winners
+            
+            const displayedWinners = document.querySelectorAll('#fixtures span[id$="_winner"]');
+            const winners = Array.from(displayedWinners).map(winner => winner.textContent.split(': ')[1]);
+
+            if (winners.length === displayedWinners.length) {
+                const winnersList = document.createElement('ul');
+                winners.forEach(winner => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = winner;
+                    winnersList.appendChild(listItem);
+                });
+                winnersContainer.appendChild(winnersList);
+                
+                // Proceed to the next round
+                startNextRound(winners);
+            } else {
+                alert("Please determine winners for all matches.");
+            }
+        }
+
+        function startNextRound(winners) {
+            const fixturesContainer = document.getElementById('fixtures');
+            fixturesContainer.innerHTML = ""; // Clear previous fixtures
+            
+            const numWinners = winners.length;
+            const numMatches = Math.floor(numWinners / 2);
+            
+            for (let i = 0; i < numMatches; i++) {
+                const match = document.createElement('div');
+                const team1 = winners[i];
+                const team2 = winners[numMatches + i];
+                const matchId = `match_${i + 1}`;
+                match.innerHTML = `<span>${team1}</span> vs <span>${team2}</span><br>
+                                   <input type="number" id="${matchId}_score1" placeholder="Score ${team1}">
+                                   <input type="number" id="${matchId}_score2" placeholder="Score ${team2}">
+                                   <button onclick="displayWinner('${team1}', '${team2}', '${matchId}')">OK</button>
+                                   <span id="${matchId}_winner"></span>`;
+                fixturesContainer.appendChild(match);
+            }
+        }
+    </script>
+</body>
+</html>
